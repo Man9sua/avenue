@@ -1,0 +1,249 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter, ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif;
+  background: #050305;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100svh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(108, 11, 59, 0.2), transparent 27rem),
+    linear-gradient(145deg, #090508 0%, #020202 48%, #0a0206 100%);
+}
+
+.scene {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  isolation: isolate;
+  place-items: center;
+  overflow: hidden;
+}
+
+.scene::before {
+  position: absolute;
+  z-index: -1;
+  width: min(44rem, 92vw);
+  height: min(21rem, 42vw);
+  border: 1px solid rgba(255, 91, 167, 0.08);
+  border-radius: 50%;
+  background: rgba(35, 5, 21, 0.16);
+  box-shadow:
+    0 0 8rem rgba(255, 0, 102, 0.08),
+    inset 0 0 5rem rgba(255, 0, 102, 0.04);
+  content: "";
+  filter: blur(1px);
+  transform: rotate(-8deg);
+}
+
+.ambient {
+  position: absolute;
+  z-index: -2;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 50%;
+  background: rgba(238, 0, 96, 0.07);
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+.ambient--one {
+  top: -12rem;
+  left: -8rem;
+}
+
+.ambient--two {
+  right: -10rem;
+  bottom: -13rem;
+}
+
+.hearts {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.heart {
+  --size: 30px;
+  --duration: 10s;
+  --drift: 30px;
+  --tilt: 45deg;
+  --opacity: 0.75;
+  position: absolute;
+  bottom: -18vh;
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  opacity: 0;
+  filter:
+    drop-shadow(0 0 3px rgba(255, 0, 112, 0.95))
+    drop-shadow(0 0 12px rgba(255, 0, 76, 0.55));
+  animation: float-up var(--duration) linear var(--delay) forwards;
+  will-change: transform, opacity;
+}
+
+.heart svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.heart path {
+  fill: rgba(92, 0, 39, 0.15);
+  stroke: var(--color);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: clamp(2px, calc(var(--size) / 11), 5px);
+  vector-effect: non-scaling-stroke;
+}
+
+.message {
+  position: relative;
+  z-index: 2;
+  max-width: min(62rem, calc(100vw - 2rem));
+  padding: clamp(1.4rem, 4vw, 2.5rem) clamp(1.25rem, 5vw, 4rem);
+  text-align: center;
+}
+
+.message::before {
+  position: absolute;
+  z-index: -1;
+  inset: -20% -5%;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.38);
+  content: "";
+  filter: blur(28px);
+}
+
+h1 {
+  margin: 0;
+  color: #fff8fb;
+  font-size: clamp(2.5rem, 6vw, 6rem);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  text-wrap: balance;
+  white-space: nowrap;
+  text-shadow:
+    0 2px 1px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(255, 35, 127, 0.3),
+    0 0 60px rgba(255, 0, 92, 0.18);
+}
+
+.smile {
+  display: inline-block;
+  margin-left: 0.05em;
+  color: #ff4b99;
+  text-shadow:
+    0 0 12px rgba(255, 22, 123, 0.8),
+    0 0 35px rgba(255, 0, 90, 0.5);
+  animation: smile-pulse 2.4s ease-in-out infinite;
+}
+
+.message__sparkle {
+  position: absolute;
+  top: 0;
+  left: 7%;
+  color: #ff4f9b;
+  font-size: clamp(0.7rem, 1.6vw, 1.15rem);
+  text-shadow: 0 0 12px #ff006e;
+  animation: twinkle 2.8s ease-in-out infinite;
+}
+
+.message__sparkle--right {
+  top: auto;
+  right: 8%;
+  bottom: 0;
+  left: auto;
+  animation-delay: -1.4s;
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 8vh, 0) rotate(calc(var(--tilt) - 8deg)) scale(0.75);
+  }
+
+  10%,
+  72% {
+    opacity: var(--opacity);
+  }
+
+  45% {
+    transform: translate3d(var(--drift), -55vh, 0) rotate(var(--tilt)) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--drift) * -0.45), -130vh, 0)
+      rotate(calc(var(--tilt) + 9deg)) scale(0.82);
+  }
+}
+
+@keyframes smile-pulse {
+  50% {
+    transform: scale(1.08) rotate(2deg);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.75) rotate(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.25) rotate(90deg);
+  }
+}
+
+@media (max-width: 540px) {
+  .scene::before {
+    width: 110vw;
+    height: 52vw;
+  }
+
+  h1 {
+    max-width: 10ch;
+    white-space: normal;
+  }
+
+  .message__sparkle {
+    left: 4%;
+  }
+
+  .message__sparkle--right {
+    right: 4%;
+    left: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heart,
+  .smile,
+  .message__sparkle {
+    animation-play-state: paused;
+  }
+
+  .heart {
+    opacity: 0.55;
+  }
+}
