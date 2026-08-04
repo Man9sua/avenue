@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#050305" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Avenue" />
     <meta
       name="description"
       content="Create and share an animated neon greeting card."
@@ -51,16 +55,6 @@
       </svg>
     </button>
 
-    <button
-      class="motion-permission"
-      id="motion-permission"
-      type="button"
-      data-editor-ui
-      hidden
-    >
-      Enable shake controls
-    </button>
-
     <div class="editor-backdrop" id="editor-backdrop" data-editor-ui></div>
 
     <aside
@@ -75,9 +69,24 @@
           <p class="eyebrow">Avenue</p>
           <h2 id="editor-title">Card editor</h2>
         </div>
-        <button class="icon-button" id="close-editor" type="button" aria-label="Close editor">
-          <span aria-hidden="true">×</span>
-        </button>
+        <div class="editor-header__actions">
+          <button
+            class="icon-button shake-toggle"
+            id="shake-toggle"
+            type="button"
+            aria-label="Turn on shake controls"
+            aria-pressed="false"
+            title="Turn on shake controls"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="8" y="3" width="8" height="18" rx="2" />
+              <path d="M11 18h2M5.5 8.5a5 5 0 0 0 0 7M18.5 8.5a5 5 0 0 1 0 7M3 6a8.5 8.5 0 0 0 0 12M21 6a8.5 8.5 0 0 1 0 12" />
+            </svg>
+          </button>
+          <button class="icon-button" id="close-editor" type="button" aria-label="Close editor">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
       </header>
 
       <div class="editor-content">

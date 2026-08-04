@@ -79,6 +79,8 @@ input:focus-visible {
   width: 100%;
   height: 100dvh;
   min-height: 100svh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
   isolation: isolate;
   overflow: hidden;
   background:
@@ -378,8 +380,7 @@ body[data-background="fire"] .scene::after {
   transform: translateY(-50%) scaleY(1);
 }
 
-.editor-fab,
-.motion-permission {
+.editor-fab {
   position: fixed;
   z-index: 32;
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -409,22 +410,6 @@ body[data-background="fire"] .scene::after {
 .editor-fab svg {
   width: 23px;
   fill: currentColor;
-}
-
-.motion-permission {
-  right: calc(12px + env(safe-area-inset-right));
-  bottom: calc(16px + env(safe-area-inset-bottom));
-  min-height: 44px;
-  max-width: min(74vw, 270px);
-  padding: 0.7rem 0.95rem;
-  border-radius: 14px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.motion-permission[hidden] {
-  display: none;
 }
 
 .editor-backdrop {
@@ -494,6 +479,12 @@ body.editor-open .editor-backdrop {
   letter-spacing: -0.02em;
 }
 
+.editor-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
 .icon-button {
   display: grid;
   width: 44px;
@@ -511,6 +502,32 @@ body.editor-open .editor-backdrop {
 
 .icon-button span {
   transform: translateY(-1px);
+}
+
+.icon-button svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shake-toggle {
+  display: none;
+}
+
+.shake-toggle.is-active {
+  border-color: var(--accent-border);
+  color: var(--accent-text);
+  background: var(--accent-panel);
+  box-shadow: 0 0 18px var(--accent-soft);
+}
+
+.shake-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
 }
 
 .editor-content {
@@ -876,10 +893,6 @@ input[type="color"] {
   gap: 0.65rem;
 }
 
-body.preview-mode .motion-permission {
-  display: none;
-}
-
 body.preview-mode .editor-fab {
   opacity: 0.22;
   transform: translateX(-38%);
@@ -1063,6 +1076,10 @@ body[data-mode="view"] #card-text {
   .editor-fab {
     display: grid;
     place-items: center;
+  }
+
+  .shake-toggle {
+    display: grid;
   }
 
   .editor-panel {

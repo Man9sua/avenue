@@ -1,4 +1,3 @@
-// 1. DOM elements
 const dom = {
   body: document.body,
   scene: document.querySelector("#card-scene"),
@@ -6,7 +5,7 @@ const dom = {
   cardText: document.querySelector("#card-text"),
   edgeTrigger: document.querySelector("#edge-trigger"),
   editorFab: document.querySelector("#editor-fab"),
-  motionPermission: document.querySelector("#motion-permission"),
+  shakeToggle: document.querySelector("#shake-toggle"),
   backdrop: document.querySelector("#editor-backdrop"),
   panel: document.querySelector("#editor-panel"),
   closeEditor: document.querySelector("#close-editor"),
@@ -29,7 +28,6 @@ const dom = {
   toastRegion: document.querySelector("#toast-region"),
 };
 
-// 2. Application state
 const DEFAULT_TEXT = dom.cardText.textContent.trim();
 const DEFAULT_COLOR = "#ff4b99";
 const DEFAULT_TEXT_COLOR = "#fff8fb";
@@ -41,6 +39,7 @@ const MAX_SERIALIZED_BYTES = 50000;
 const validBackgrounds = new Set(["hearts", "stars", "fire"]);
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+const mobilePointer = window.matchMedia("(hover: none), (pointer: coarse)");
 
 const state = {
   mode: "editor",
@@ -51,6 +50,7 @@ const state = {
   particleTimer: null,
   generatedUrl: null,
   motionListenerEnabled: false,
+  shakeEnabled: false,
   motionLastSample: 0,
   lastShakeAt: 0,
   lastAcceleration: null,
@@ -63,13 +63,13 @@ const storageKeys = {
   color: "avenueCardV2.color",
   glow: "avenueCardV2.glow",
   shakePermission: "avenueCardV2.shakePermission",
+  shakeEnabled: "avenueCardV2.shakeEnabled",
 };
 
 const randomBetween = (min, max) => Math.random() * (max - min) + min;
 const randomItem = (items) => items[Math.floor(Math.random() * items.length)];
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-// 3. Background configurations
 const backgroundModes = {
   hearts: {
     className: "heart",
@@ -219,7 +219,6 @@ const backgroundModes = {
   },
 };
 
-// 4. Animated particle generation
 function getParticleLimit(config) {
   let regularCount = clamp(
     Math.round(window.innerWidth / config.density),
@@ -357,7 +356,6 @@ function changeBackground(mode, { persist = true, force = false } = {}) {
   }
 }
 
-// 5. Editor panel controls
 function openEditor({ focus = false } = {}) {
   if (state.mode === "view") return;
   dom.body.classList.add("editor-open");
@@ -395,11 +393,31 @@ function closeResetModal() {
   dom.resetModal.setAttribute("aria-hidden", "true");
 }
 
-// 6. Shake detection
 function enableMotionListener() {
   if (state.mode === "view" || state.motionListenerEnabled || !("DeviceMotionEvent" in window)) return;
   window.addEventListener("devicemotion", handleDeviceMotion, { passive: true });
   state.motionListenerEnabled = true;
+}
+
+function disableMotionListener() {
+  if (state.motionListenerEnabled) {
+    window.removeEventListener("devicemotion", handleDeviceMotion);
+  }
+  state.motionListenerEnabled = false;
+  state.motionLastSample = 0;
+  state.lastAcceleration = null;
+}
+
+function updateShakeToggle() {
+  const supported = "DeviceMotionEvent" in window;
+  const active = supported && state.shakeEnabled;
+  const label = active ? "Turn off shake controls" : "Turn on shake controls";
+
+  dom.shakeToggle.disabled = !supported;
+  dom.shakeToggle.classList.toggle("is-active", active);
+  dom.shakeToggle.setAttribute("aria-pressed", String(active));
+  dom.shakeToggle.setAttribute("aria-label", supported ? label : "Shake controls are not supported");
+  dom.shakeToggle.title = supported ? label : "Shake controls are not supported";
 }
 
 function handleDeviceMotion(event) {
@@ -433,40 +451,71 @@ function handleDeviceMotion(event) {
   if (state.mode === "editor" && !dom.body.classList.contains("editor-open")) openEditor();
 }
 
-async function requestMotionPermission() {
-  try {
-    const permission = await DeviceMotionEvent.requestPermission();
-
-    if (permission === "granted") {
-      storage.set(storageKeys.shakePermission, "granted");
-      dom.motionPermission.hidden = true;
-      enableMotionListener();
-      showToast("Shake controls enabled");
-    } else {
-      storage.set(storageKeys.shakePermission, "denied");
-      showToast("Motion access was denied — use the button on the left");
-    }
-  } catch (error) {
-    console.warn("Could not request motion access", error);
-    showToast("Could not enable shake controls — use the button on the left");
-  }
-}
-
-function initializeMotionControl() {
-  if (state.mode === "view" || !("DeviceMotionEvent" in window)) return;
-
-  const needsPermission = typeof DeviceMotionEvent.requestPermission === "function";
-  const savedPermission = storage.get(storageKeys.shakePermission);
-
-  if (needsPermission && savedPermission !== "granted") {
-    dom.motionPermission.hidden = false;
+async function enableShakeControls() {
+  if (!("DeviceMotionEvent" in window)) {
+    updateShakeToggle();
+    showToast("Shake controls are not supported on this device");
     return;
   }
 
-  enableMotionListener();
+  try {
+    if (typeof DeviceMotionEvent.requestPermission === "function") {
+      const permission = await DeviceMotionEvent.requestPermission();
+
+      if (permission !== "granted") {
+        storage.set(storageKeys.shakePermission, "denied");
+        state.shakeEnabled = false;
+        storage.set(storageKeys.shakeEnabled, "false");
+        updateShakeToggle();
+        showToast("Motion access was denied");
+        return;
+      }
+
+      storage.set(storageKeys.shakePermission, "granted");
+    }
+
+    state.shakeEnabled = true;
+    storage.set(storageKeys.shakeEnabled, "true");
+    enableMotionListener();
+    updateShakeToggle();
+    showToast("Shake controls enabled");
+  } catch (error) {
+    console.warn("Could not request motion access", error);
+    state.shakeEnabled = false;
+    storage.set(storageKeys.shakeEnabled, "false");
+    updateShakeToggle();
+    showToast("Could not enable shake controls");
+  }
 }
 
-// 7. Live text editor
+function disableShakeControls() {
+  state.shakeEnabled = false;
+  storage.set(storageKeys.shakeEnabled, "false");
+  disableMotionListener();
+  updateShakeToggle();
+  showToast("Shake controls disabled");
+}
+
+function toggleShakeControls() {
+  if (state.shakeEnabled) disableShakeControls();
+  else enableShakeControls();
+}
+
+function initializeMotionControl() {
+  updateShakeToggle();
+  if (state.mode === "view" || !mobilePointer.matches || !("DeviceMotionEvent" in window)) return;
+
+  const needsPermission = typeof DeviceMotionEvent.requestPermission === "function";
+  const savedPermission = storage.get(storageKeys.shakePermission);
+  const savedEnabled = storage.get(storageKeys.shakeEnabled) === "true";
+
+  if (!savedEnabled || (needsPermission && savedPermission !== "granted")) return;
+
+  state.shakeEnabled = true;
+  enableMotionListener();
+  updateShakeToggle();
+}
+
 function updateTextCounter() {
   dom.textCounter.textContent = `${dom.textInput.value.length} / ${MAX_TEXT_LENGTH}`;
 }
@@ -528,7 +577,6 @@ function sanitizeStoredMarkup(markup) {
   return safeFragment;
 }
 
-// 8. Selection formatting
 function createHighlightSpan(color, glow) {
   const span = document.createElement("span");
   span.className = "custom-highlight";
@@ -730,7 +778,6 @@ function setActiveColor(color, { apply = true } = {}) {
   if (apply) applySelectionFormatting("color", state.color);
 }
 
-// 9. localStorage
 const storage = {
   get(key) {
     try {
@@ -810,7 +857,6 @@ function resetEverything() {
   showToast("Card reset");
 }
 
-// 10. Link creation and sharing
 function invalidateGeneratedLink() {
   state.generatedUrl = null;
   dom.generatedLink.value = "";
@@ -1024,7 +1070,9 @@ function enterViewMode(cardState) {
   dom.body.classList.remove("editor-open", "preview-mode");
   dom.panel.setAttribute("aria-hidden", "true");
   dom.editorFab.setAttribute("aria-expanded", "false");
-  dom.motionPermission.hidden = true;
+  state.shakeEnabled = false;
+  disableMotionListener();
+  updateShakeToggle();
   renderSharedContent(safeCard.content);
   changeBackground(safeCard.background, { persist: false, force: true });
   document.title = "A card for you";
@@ -1131,7 +1179,6 @@ function openGeneratedCard() {
   window.open(state.generatedUrl, "_blank", "noopener,noreferrer");
 }
 
-// Toast notifications
 function showToast(message, duration = 2800) {
   const toast = document.createElement("div");
   toast.className = "toast";
@@ -1144,7 +1191,6 @@ function showToast(message, duration = 2800) {
   }, duration);
 }
 
-// 11. Event handlers
 dom.edgeTrigger.addEventListener("pointerenter", () => {
   if (finePointer.matches) openEditor();
 });
@@ -1152,7 +1198,7 @@ dom.edgeTrigger.addEventListener("pointerenter", () => {
 dom.editorFab.addEventListener("click", () => openEditor({ focus: true }));
 dom.closeEditor.addEventListener("click", () => closeEditor({ returnFocus: true }));
 dom.backdrop.addEventListener("click", () => closeEditor());
-dom.motionPermission.addEventListener("click", requestMotionPermission);
+dom.shakeToggle.addEventListener("click", toggleShakeControls);
 
 dom.backgroundInputs.forEach((input) => {
   input.addEventListener("change", () => {
@@ -1225,7 +1271,6 @@ window.addEventListener("resize", () => {
   }
 });
 
-// 12. Application initialization
 async function initializeApplication() {
   const sharedCard = await readSharedCardFromHash();
 
