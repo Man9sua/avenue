@@ -1,31 +1,190 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#050305" />
     <meta
       name="description"
-      content="Тёплый комплимент на фоне плавающих неоновых сердечек."
+      content="Create and share an animated neon greeting card."
     />
-    <title>Ты красивая кстати)</title>
+    <title>Avenue Card</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23ff1685' d='M32 55C26 49 8 37 8 21 8 9 24 5 32 16 40 5 56 9 56 21c0 16-18 28-24 34Z'/%3E%3C/svg%3E"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
-  <body>
-    <main class="scene">
+  <body data-background="hearts" data-mode="editor">
+    <main class="scene" id="card-scene">
       <div class="ambient ambient--one" aria-hidden="true"></div>
       <div class="ambient ambient--two" aria-hidden="true"></div>
-      <div class="hearts" aria-hidden="true"></div>
+      <div class="particles" id="particles" aria-hidden="true"></div>
 
-      <section class="message" aria-label="Комплимент">
+      <section class="message" aria-label="Card message">
         <span class="message__sparkle" aria-hidden="true">✦</span>
-        <h1>Ты красивая кстати<span class="smile">)</span></h1>
-        <span class="message__sparkle message__sparkle--right" aria-hidden="true"
-          >✦</span
-        >
+        <h1 id="card-text">text</h1>
+        <span class="message__sparkle message__sparkle--right" aria-hidden="true">✦</span>
       </section>
     </main>
 
-    <script src="script.js"></script>
+    <div
+      class="edge-trigger"
+      id="edge-trigger"
+      data-editor-ui
+      aria-hidden="true"
+    >
+      <span></span>
+    </div>
+
+    <button
+      class="editor-fab"
+      id="editor-fab"
+      type="button"
+      data-editor-ui
+      aria-label="Open card editor"
+      aria-controls="editor-panel"
+      aria-expanded="false"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 18.5V20h1.5L17.7 7.8l-1.5-1.5L4 18.5Zm15.8-12.8a1 1 0 0 0 0-1.4l-1.1-1.1a1 1 0 0 0-1.4 0l-.9.9 2.5 2.5.9-.9Z" />
+      </svg>
+    </button>
+
+    <button
+      class="motion-permission"
+      id="motion-permission"
+      type="button"
+      data-editor-ui
+      hidden
+    >
+      Enable shake controls
+    </button>
+
+    <div class="editor-backdrop" id="editor-backdrop" data-editor-ui></div>
+
+    <aside
+      class="editor-panel"
+      id="editor-panel"
+      data-editor-ui
+      aria-labelledby="editor-title"
+      aria-hidden="true"
+    >
+      <header class="editor-header">
+        <div>
+          <p class="eyebrow">Avenue</p>
+          <h2 id="editor-title">Card editor</h2>
+        </div>
+        <button class="icon-button" id="close-editor" type="button" aria-label="Close editor">
+          <span aria-hidden="true">×</span>
+        </button>
+      </header>
+
+      <div class="editor-content">
+        <fieldset class="editor-section">
+          <legend>Background</legend>
+          <div class="background-options" role="radiogroup" aria-label="Animated background">
+            <label class="background-option background-option--hearts">
+              <input type="radio" name="background" value="hearts" checked />
+              <span aria-hidden="true">♡</span>
+              <strong>Hearts</strong>
+            </label>
+            <label class="background-option background-option--stars">
+              <input type="radio" name="background" value="stars" />
+              <span aria-hidden="true">☆</span>
+              <strong>Stars</strong>
+            </label>
+            <label class="background-option background-option--fire">
+              <input type="radio" name="background" value="fire" />
+              <span aria-hidden="true">♨</span>
+              <strong>Fire</strong>
+            </label>
+          </div>
+        </fieldset>
+
+        <section class="editor-section" aria-labelledby="text-section-title">
+          <div class="section-heading">
+            <h3 id="text-section-title">Text</h3>
+            <span id="text-counter">0 / 700</span>
+          </div>
+          <label class="sr-only" for="text-input">Card text</label>
+          <textarea
+            id="text-input"
+            rows="4"
+            maxlength="700"
+            placeholder="Write something meaningful…"
+          ></textarea>
+          <p class="field-hint">Changes appear on the card instantly.</p>
+        </section>
+
+        <section class="editor-section" aria-labelledby="format-section-title">
+          <div class="section-heading">
+            <h3 id="format-section-title">Selection style</h3>
+          </div>
+          <p class="field-hint selection-hint" id="selection-hint">
+            Select part of the card text, then choose a style.
+          </p>
+
+          <div class="color-row">
+            <label for="highlight-color">Text color</label>
+            <input id="highlight-color" type="color" value="#ff4b99" />
+          </div>
+
+          <div class="color-presets" aria-label="Quick colors">
+            <button type="button" data-color="#fff8fb" aria-label="White" style="--swatch: #fff8fb"></button>
+            <button type="button" data-color="#ff4b99" aria-label="Pink" style="--swatch: #ff4b99"></button>
+            <button type="button" data-color="#ff3b30" aria-label="Red" style="--swatch: #ff3b30"></button>
+            <button type="button" data-color="#ffd54a" aria-label="Gold" style="--swatch: #ffd54a"></button>
+            <button type="button" data-color="#65d9ff" aria-label="Blue" style="--swatch: #65d9ff"></button>
+            <button type="button" data-color="#ba76ff" aria-label="Purple" style="--swatch: #ba76ff"></button>
+          </div>
+
+          <div class="format-actions">
+            <button class="control-button" id="glow-on" type="button">
+              <span aria-hidden="true">✦</span> Enable glow
+            </button>
+            <button class="control-button" id="glow-off" type="button">Disable glow</button>
+            <button class="control-button control-button--quiet" id="format-reset" type="button">
+              Reset selection style
+            </button>
+          </div>
+        </section>
+
+        <section class="editor-section" aria-labelledby="result-section-title">
+          <div class="section-heading">
+            <h3 id="result-section-title">Share</h3>
+          </div>
+          <div class="result-actions">
+            <button class="control-button control-button--primary" id="copy-link" type="button">
+              Copy link
+            </button>
+          </div>
+
+          <div class="link-result" id="link-result" hidden>
+            <label for="generated-link">Generated card link</label>
+            <input id="generated-link" type="url" readonly />
+          </div>
+          <p class="field-hint">Publish the site before creating a link that others can open.</p>
+        </section>
+
+        <button class="reset-button" id="reset-all" type="button">Reset everything</button>
+      </div>
+    </aside>
+
+    <div class="toast-region" id="toast-region" data-editor-ui aria-live="polite"></div>
+
+    <div class="modal" id="reset-modal" data-editor-ui aria-hidden="true">
+      <div class="modal__backdrop" data-modal-close></div>
+      <section class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="reset-title">
+        <h2 id="reset-title">Reset this card?</h2>
+        <p>The text, background, and all custom styles will return to their defaults.</p>
+        <div class="modal__actions">
+          <button class="control-button control-button--quiet" type="button" data-modal-close>Cancel</button>
+          <button class="control-button control-button--danger" id="confirm-reset" type="button">Reset</button>
+        </div>
+      </section>
+    </div>
+
+    <script src="script.js" defer></script>
   </body>
 </html>
